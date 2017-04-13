@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Nicolas Lochet Licensed under the Apache License, Version 2.0 (the "License");
+ * Copyright 2017 Nicolas Lochet Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -13,19 +13,46 @@ module.exports = (function () {
   'use strict'
 
   function Store() {
-    
+    if (! (this instanceof Store)) return new Store()
+    this._ = {}
   }
-  Store.prototype.set = function(id) {
-    
+  Store.prototype.set = function(id, value) {
+    if (! this.has(id)) {
+      this._[id] = {s: {}}
+    }
+    this._[id].v = value
+    this.pub(id, 'update')
   }
-  
-  function StoreType(n) { this.n = n }
+  Store.prototype.pub = function(id, t) {
+    Object.keys(this._[id].s).forEach(function(k) { this._[id].s[k](id, this._[id].v, t) }.bind(this))
+  }
+  Store.prototype.has = function(id) {
+    return id in this._
+  }
+  Store.prototype.get = function(id) {
+    return this._[id]
+  }
+  Store.prototype.del = function(id) {
+    if (! this.has(id)) {
+      throw new Error('Cannot delete, "'+id+'" does not exists !')
+    }
+    this.pub(id, 'delete')
+    delete this._[id]
+  }
+  Store.prototype.sub = function(id, src, cb, now) {
+    if (! this.has(id)) {
+      throw new Error('Cannot subscribe to "'+id+'" does not exists !')
+    }
+    this._[id].s[src] = cb
+    if (now) cb(id, this._[id].v, 'sub')
+  }
+  Store.prototype.unsub = function(id, src) {
+    delete this._[id].s[src]
+  }
 
-  function StoreId(t, k) {
-    if (t == null || ! (t instanceof StoreType)) throw new Error("Invalid StoreType: "+JSON.stringify(t))
-    if (k == null) throw new Error("Store key cannot be null!") 
+  Store.newId = function() {
+    return Date.now().toString(16) // TODO: improve this algo
   }
-  
-  
+
   return Store
 }())
