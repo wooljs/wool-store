@@ -30,7 +30,7 @@ module.exports = (function () {
     return id in this._
   }
   Store.prototype.get = function(id) {
-    return this._[id]
+    return this._[id].v
   }
   Store.prototype.del = function(id) {
     if (! this.has(id)) {
@@ -49,8 +49,7 @@ module.exports = (function () {
   Store.prototype.unsub = function(id, src) {
     delete this._[id].s[src]
   }
-
-  Store.newId = function() {
+  Store.prototype.newId = Store.newId = function() {
     return Date.now().toString(16) // TODO: improve this algo
   }
 
