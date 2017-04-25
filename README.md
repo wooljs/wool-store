@@ -1,2 +1,2 @@
-# wool-state
-A state manager for wool 
+# wool-store
+A store manager for wool 

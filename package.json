@@ -1,7 +1,7 @@
 {
-  "name": "wool-state",
+  "name": "wool-store",
   "version": "0.0.2",
-  "description": "A state manager for wool",
+  "description": "A store manager for wool",
   "main": "index.js",
   "scripts": {
     "pretest": "npm run lint",
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nicocube/wool-state.git"
+    "url": "git+https://github.com/nicocube/wool-store.git"
   },
   "keywords": [
     "state"
@@ -21,9 +21,9 @@
   "author": "Nicolas Lochet",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/nicocube/wool-state/issues"
+    "url": "https://github.com/nicocube/wool-store/issues"
   },
-  "homepage": "https://github.com/nicocube/wool-state#readme",
+  "homepage": "https://github.com/nicocube/wool-store#readme",
   "devDependencies": {
     "eslint": "^3.14.1",
     "istanbul": "^0.4.5",
