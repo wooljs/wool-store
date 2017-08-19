@@ -15,16 +15,7 @@ module.exports = (function () {
   function Store() {
     if (! (this instanceof Store)) return new Store()
     this._ = {}
-  }
-  Store.prototype.set = function(id, value) {
-    if (! this.has(id)) {
-      this._[id] = {s: {}}
-    }
-    this._[id].v = value
-    this.pub(id, 'update')
-  }
-  Store.prototype.pub = function(id, t) {
-    Object.keys(this._[id].s).forEach(function(k) { this._[id].s[k](id, this._[id].v, t) }.bind(this))
+    this.s = {}
   }
   Store.prototype.has = function(id) {
     return id in this._
@@ -32,12 +23,30 @@ module.exports = (function () {
   Store.prototype.get = function(id) {
     return this._[id].v
   }
+  Store.prototype.set = function(id, value) {
+    if (! this.has(id)) {
+      this._[id] = {s: {}}
+    }
+    this._[id].v = value
+    this.pubAll(id, 'update')
+    this.pub(id, 'update')
+  }
   Store.prototype.del = function(id) {
     if (! this.has(id)) {
       throw new Error('Cannot delete, "'+id+'" does not exists !')
     }
+    this.pubAll(id, 'delete')
     this.pub(id, 'delete')
     delete this._[id]
+  }
+  Store.prototype.pubAll = function(id, t) {
+    Object.keys(this.s).forEach(function(k) { this.s[k](id, this._[id].v, t) }.bind(this))
+  }
+  Store.prototype.pub = function(id, t) {
+    Object.keys(this._[id].s).forEach(function(k) { this._[id].s[k](id, this._[id].v, t) }.bind(this))
+  }
+  Store.prototype.subAll = function(src, cb) {
+    this.s[src] = cb
   }
   Store.prototype.sub = function(id, src, cb, now) {
     if (! this.has(id)) {
@@ -45,6 +54,9 @@ module.exports = (function () {
     }
     this._[id].s[src] = cb
     if (now) cb(id, this._[id].v, 'sub')
+  }
+  Store.prototype.unsubAll = function(src) {
+    delete this.s[src]
   }
   Store.prototype.unsub = function(id, src) {
     delete this._[id].s[src]

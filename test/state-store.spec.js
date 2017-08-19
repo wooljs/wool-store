@@ -14,6 +14,47 @@
 var test = require('tape')
   , Store = require(__dirname + '/../index.js')
 
+test('set subAll set del', function(t) {
+  var store = Store()
+    , id = Store.newId()
+    , src = 'test'
+    , i = 0
+
+  store.set(id, 42)
+
+  store.subAll(src, function(id, value, type) {
+    switch (i) {
+    case 0:
+      t.deepEqual(value, 'plop')
+      t.deepEqual(type, 'update')
+      break
+    case 1:
+      t.deepEqual(value, {foo: 'bar'})
+      t.deepEqual(type, 'update')
+      break
+    case 2:
+      t.deepEqual(value, {foo: 'bar'})
+      t.deepEqual(type, 'delete')
+      break
+    default:
+      t.fail('too much call')
+      break
+    }
+    i += 1
+  })
+
+  store.set(id, 'plop')
+
+  store.set(id, {foo: 'bar'})
+
+  store.del(id)
+
+  t.deepEqual(i, 3)
+
+  t.plan(7)
+  t.end()
+})
+
 test('set sub set del', function(t) {
   var store = Store()
     , id = Store.newId()
@@ -52,6 +93,47 @@ test('set sub set del', function(t) {
   t.deepEqual(i, 3)
 
   t.plan(7)
+  t.end()
+})
+
+test('set subAll+cb set set unsubAll set del', function(t) {
+  var store = Store()
+    , id = Store.newId()
+    , src = 'test'
+    , i = 0
+
+  store.set(id, 42)
+
+  store.subAll(src, function(id, value, type) {
+    switch (i) {
+    case 0:
+      t.deepEqual(value, 'plop')
+      t.deepEqual(type, 'update')
+      break
+    case 1:
+      t.deepEqual(value, {foo: 'bar'})
+      t.deepEqual(type, 'update')
+      break
+    default:
+      t.fail('too much call')
+      break
+    }
+    i += 1
+  })
+
+  store.set(id, 'plop')
+
+  store.set(id, {foo: 'bar'})
+
+  store.unsubAll(src)
+
+  store.set(id, 'boom')
+
+  store.del(id)
+
+  t.deepEqual(i, 2)
+
+  t.plan(5)
   t.end()
 })
 
