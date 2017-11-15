@@ -21,7 +21,8 @@ module.exports = (function () {
     return id in this._
   }
   Store.prototype.get = function(id) {
-    return this._[id].v
+    var o = this._[id]
+    return o ? o.v : undefined
   }
   Store.prototype.set = function(id, value) {
     if (! this.has(id)) {
