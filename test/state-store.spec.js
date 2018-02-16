@@ -12,10 +12,10 @@
 'use strict'
 
 var test = require('tape')
-  , Store = require(__dirname + '/../index.js')
+  , Store = require(__dirname + '/../index.js').Store
 
 test('set subAll set del', function(t) {
-  var store = Store()
+  var store = Store.build()
     , id = Store.newId()
     , src = 'test'
     , i = 0
@@ -56,7 +56,7 @@ test('set subAll set del', function(t) {
 })
 
 test('set sub set del', function(t) {
-  var store = Store()
+  var store = Store.build()
     , id = Store.newId()
     , src = 'test'
     , i = 0
@@ -97,7 +97,7 @@ test('set sub set del', function(t) {
 })
 
 test('set subAll+cb set set unsubAll set del', function(t) {
-  var store = Store()
+  var store = Store.build()
     , id = Store.newId()
     , src = 'test'
     , i = 0
@@ -138,7 +138,7 @@ test('set subAll+cb set set unsubAll set del', function(t) {
 })
 
 test('set sub+cb set set unsub set del', function(t) {
-  var store = Store()
+  var store = Store.build()
     , id = Store.newId()
     , src = 'test'
     , i = 0

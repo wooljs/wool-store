@@ -9,62 +9,105 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-module.exports = (function () {
-  'use strict'
-
-  function Store() {
-    if (! (this instanceof Store)) return new Store()
-    this._ = {}
-    this.s = {}
+class Store {
+  constructor() {
+    this.db = new Map()
+    this.obs = new Map()
   }
-  Store.prototype.has = function(id) {
-    return id in this._
+  static build() {
+    return new Store()
   }
-  Store.prototype.get = function(id) {
-    var o = this._[id]
-    return o ? o.v : undefined
-  }
-  Store.prototype.set = function(id, value) {
-    if (! this.has(id)) {
-      this._[id] = {s: {}}
-    }
-    this._[id].v = value
-    this.pubAll(id, 'update')
-    this.pub(id, 'update')
-  }
-  Store.prototype.del = function(id) {
-    if (! this.has(id)) {
-      throw new Error('Cannot delete, "'+id+'" does not exists !')
-    }
-    this.pubAll(id, 'delete')
-    this.pub(id, 'delete')
-    delete this._[id]
-  }
-  Store.prototype.pubAll = function(id, t) {
-    Object.keys(this.s).forEach(function(k) { this.s[k](id, this._[id].v, t) }.bind(this))
-  }
-  Store.prototype.pub = function(id, t) {
-    Object.keys(this._[id].s).forEach(function(k) { this._[id].s[k](id, this._[id].v, t) }.bind(this))
-  }
-  Store.prototype.subAll = function(src, cb) {
-    this.s[src] = cb
-  }
-  Store.prototype.sub = function(id, src, cb, now) {
-    if (! this.has(id)) {
-      throw new Error('Cannot subscribe to "'+id+'" does not exists !')
-    }
-    this._[id].s[src] = cb
-    if (now) cb(id, this._[id].v, 'sub')
-  }
-  Store.prototype.unsubAll = function(src) {
-    delete this.s[src]
-  }
-  Store.prototype.unsub = function(id, src) {
-    delete this._[id].s[src]
-  }
-  Store.prototype.newId = Store.newId = function() {
+  static newId() {
     return Date.now().toString(16) // TODO: improve this algo
   }
+  has(k) {
+    return this.db.has(k)
+  }
+  get(k) {
+    let o = this.db.get(k)
+    return o ? o.get() : undefined
+  }
+  set(k, v) {
+    let o = this.db.get(k)
+    if (o) {
+      o.set(v)
+    } else {
+      this.db.set(k, new Observable(k, v))
+    }
+    this.pubAll(k, v, 'update')
+  }
+  del(k) {
+    if (! this.has(k)) {
+      throw new Error('Cannot delete, "'+k+'" does not exists !')
+    }
+    let o = this.db.get(k)
+    this.pubAll(k, o.get(), 'delete')
+    o.pub('delete')
+    this.db.delete(k)
+  }
+  sub(k, src, cb, now) {
+    if (! this.has(k)) {
+      throw new Error('Cannot subscribe, "'+k+'" does not exists !')
+    }
+    let o = this.db.get(k)
+    o.sub(src, cb)
+    if (now) o.pub('sub')
+  }
+  unsub(k, src) {
+    if (! this.has(k)) {
+      throw new Error('Cannot unsubscribe, "'+k+'" does not exists !')
+    }
+    let o = this.db.get(k)
+    o.unsub(src)
+  }
+  subAll(src, cb){
+    this.obs.set(src,cb)
+  }
+  unsubAll(src) {
+    this.obs.delete(src)
+  }
+  pubAll(k, v, t) {
+    this.obs.forEach(cb => cb(k, v, t))
+  }
+}
 
-  return Store
-}())
+class Observable {
+  constructor(k, v) {
+    this.k = k
+    this.v = v
+    this.obs = new Map()
+  }
+  set(v) {
+    this.v = v
+    this.pub('update')
+  }
+  get() {
+    return this.v
+  }
+  sub(src, cb) {
+    this.obs.set(src,cb)
+  }
+  unsub(src) {
+    this.obs.delete(src)
+  }
+  pub(t) {
+    this.obs.forEach(cb => cb(this.k, this.v, t))
+  }
+}
+
+class AsyncStore extends Store {
+  async has(k) {
+    return await super.has(k)
+  }
+  async get(k) {
+    return await super.get(k)
+  }
+  async set(k, v) {
+    return await super.set(k, v)
+  }
+  async del(k) {
+    return await super.del(k)
+  }
+}
+
+module.exports = { Store, AsyncStore, Observable}
