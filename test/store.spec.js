@@ -11,11 +11,11 @@
 
 'use strict'
 
-var test = require('tape')
+let test = require('tape')
   , Store = require(__dirname + '/../index.js').Store
 
 test('set subAll set del', function(t) {
-  var store = Store.build()
+  let store = Store.build()
     , id = Store.newId()
     , src = 'test'
     , i = 0
@@ -56,7 +56,7 @@ test('set subAll set del', function(t) {
 })
 
 test('set sub set del', function(t) {
-  var store = Store.build()
+  let store = Store.build()
     , id = Store.newId()
     , src = 'test'
     , i = 0
@@ -97,7 +97,7 @@ test('set sub set del', function(t) {
 })
 
 test('set subAll+cb set set unsubAll set del', function(t) {
-  var store = Store.build()
+  let store = Store.build()
     , id = Store.newId()
     , src = 'test'
     , i = 0
@@ -138,7 +138,7 @@ test('set subAll+cb set set unsubAll set del', function(t) {
 })
 
 test('set sub+cb set set unsub set del', function(t) {
-  var store = Store.build()
+  let store = Store.build()
     , id = Store.newId()
     , src = 'test'
     , i = 0
@@ -179,5 +179,61 @@ test('set sub+cb set set unsub set del', function(t) {
   t.deepEqual(i, 3)
 
   t.plan(7)
+  t.end()
+})
+
+test('set find', function(t) {
+  let store = Store.build()
+    , data = [
+      ['Prefix: 42', 42],
+      ['Prefix: 142', 'this is a string'],
+      ['Prefix: 513', [1, 2, 3, 4]],
+      ['Prefix: foo', {foo: 'bar'}],
+      ['Prefix: BaR6', {bar: 'bar'}],
+      ['Other: 42', 42],
+      ['Other: foo', {foo: 'bar'}],
+      ['Other: BaR6', {bar: 'bar'}]
+    ]
+    , found
+
+  data.forEach(([k,v])=>store.set(k,v))
+
+  found = []
+  for (let e of store.find()) {
+    found.push(e)
+  }
+
+  t.deepEqual(found.length, 8)
+  t.deepEqual(found, data)
+
+  found = []
+  for (let e of store.find(/^Prefix: /)) {
+    found.push(e)
+  }
+
+  t.deepEqual(found.length, 5)
+  t.deepEqual(found, [
+    ['Prefix: 42', 42],
+    ['Prefix: 142', 'this is a string'],
+    ['Prefix: 513', [1, 2, 3, 4]],
+    ['Prefix: foo', {foo: 'bar'}],
+    ['Prefix: BaR6', {bar: 'bar'}]
+  ])
+
+  found = []
+  for (let e of store.find(([,v]) => typeof v === 'object')) {
+    found.push(e)
+  }
+
+  t.deepEqual(found.length, 5)
+  t.deepEqual(found, [
+    ['Prefix: 513', [1, 2, 3, 4]],
+    ['Prefix: foo', {foo: 'bar'}],
+    ['Prefix: BaR6', {bar: 'bar'}],
+    ['Other: foo', {foo: 'bar'}],
+    ['Other: BaR6', {bar: 'bar'}]
+  ])
+
+  t.plan(6)
   t.end()
 })

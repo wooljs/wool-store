@@ -45,6 +45,21 @@ class Store {
     o.pub('delete')
     this.db.delete(k)
   }
+  find(q) {
+    if (typeof q === 'undefined') {
+      q = () => true
+    } else if (q instanceof RegExp) {
+      let test = RegExp.prototype.test.bind(q)
+      q = ([k]) => (test(k))
+    }
+    return function* gen() {
+      for (let [k, o] of this.db.entries()) {
+        let v = o.get()
+          , kv = [k,v]
+        if ( q(kv) ) yield kv
+      }
+    }.bind(this)()
+  }
   sub(k, src, cb, now) {
     if (! this.has(k)) {
       throw new Error('Cannot subscribe, "'+k+'" does not exists !')
