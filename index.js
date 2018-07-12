@@ -84,6 +84,13 @@ class Store {
   pubAll(k, v, t) {
     this.obs.forEach(cb => cb(k, v, t))
   }
+  unsubEveryWhere(src) {
+    this.unsubAll(src)
+    // TODO optimize datamodel for this case
+    for (let [, o] of this.db.entries()) {
+      o.unsub(src)
+    }
+  }
 }
 
 class Observable {
@@ -100,9 +107,11 @@ class Observable {
     return this.v
   }
   sub(src, cb) {
+//    console.log('sub ', this.k, src)
     this.obs.set(src,cb)
   }
   unsub(src) {
+//    console.log('unsub ', this.k, src)
     this.obs.delete(src)
   }
   pub(t) {
