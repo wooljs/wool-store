@@ -12,38 +12,26 @@
 class Store {
   constructor() {
     this.db = new Map()
-    this.obs = new Map()
+    this.pubsub = new PubSub()
   }
   static build() {
     return new Store()
   }
-  static newId() {
-    return Date.now().toString(16) // TODO: improve this algo
+  async has(k) {
+    return await this.db.has(k)
   }
-  has(k) {
-    return this.db.has(k)
+  async get(k) {
+    return await this.db.get(k)
   }
-  get(k) {
-    let o = this.db.get(k)
-    return o ? o.get() : undefined
+  async set(k, v) {
+    await this.db.set(k, v)
+    await this.pubsub.pub(k, v, 'set')
   }
-  set(k, v) {
-    let o = this.db.get(k)
-    if (o) {
-      o.set(v)
-    } else {
-      this.db.set(k, new Observable(k, v))
-    }
-    this.pubAll(k, v, 'update')
-  }
-  del(k) {
-    if (! this.has(k)) {
-      throw new Error('Cannot delete, "'+k+'" does not exists !')
-    }
-    let o = this.db.get(k)
-    this.pubAll(k, o.get(), 'delete')
-    o.pub('delete')
-    this.db.delete(k)
+  async del(k) {
+    if (! await this.has(k)) throw new StoreError('store.error.delete.key.not.exists()', k)
+    let v = await this.get(k)
+    await this.db.delete(k)
+    await this.pubsub.pub(k, v, 'del')
   }
   find(q) {
     if (typeof q === 'undefined') {
@@ -53,85 +41,81 @@ class Store {
       q = ([k]) => (test(k))
     }
     return function* gen() {
-      for (let [k, o] of this.db.entries()) {
-        let v = o.get()
-          , kv = [k,v]
+      for (let [k, v] of this.db.entries()) {
+        let kv = [k,v]
         if ( q(kv) ) yield kv
       }
     }.bind(this)()
   }
-  sub(k, src, cb, now) {
-    if (! this.has(k)) {
-      throw new Error('Cannot subscribe, "'+k+'" does not exists !')
+  async sub(src, k, cb, now) {
+    if (! await this.has(k)) throw new StoreError('store.error.sub.key.not.exists(k)', k)
+    await this.pubsub.sub(src, k, cb)
+    if (now) {
+      let v = await this.get(k)
+      await this.pubsub.pub(k, v, 'sub')
     }
-    let o = this.db.get(k)
-    o.sub(src, cb)
-    if (now) o.pub('sub')
   }
-  unsub(k, src) {
-    if (! this.has(k)) {
-      throw new Error('Cannot unsubscribe, "'+k+'" does not exists !')
-    }
-    let o = this.db.get(k)
-    o.unsub(src)
+  async unsub(src, k) {
+    if (! await this.has(k)) throw new StoreError('store.error.unsub.key.not.exists(k)', k)
+    await this.pubsub.unsub(src, k)
   }
-  subAll(src, cb){
-    this.obs.set(src,cb)
+  async subGlobal(src, cb){
+    await this.pubsub.subGlobal(src, cb)
   }
-  unsubAll(src) {
-    this.obs.delete(src)
+  async unsubGlobal(src) {
+    await this.pubsub.unsubGlobal(src)
   }
-  pubAll(k, v, t) {
-    this.obs.forEach(cb => cb(k, v, t))
-  }
-  unsubEveryWhere(src) {
-    this.unsubAll(src)
-    // TODO optimize datamodel for this case
-    for (let [, o] of this.db.entries()) {
-      o.unsub(src)
-    }
+  async unsubEveryWhere(src) {
+    await this.pubsub.unsubEveryWhere(src)
   }
 }
 
-class Observable {
-  constructor(k, v) {
-    this.k = k
-    this.v = v
-    this.obs = new Map()
+class PubSub {
+  constructor() {
+    this.global = new Map()
+    this.k_src_cb = new Map()
+    this.src_ks = new Map()
   }
-  set(v) {
-    this.v = v
-    this.pub('update')
+  async subGlobal(src, cb) {
+    await this.global.set(src, cb)
   }
-  get() {
-    return this.v
+  async sub(src, k, cb) {
+    let src_cb = await this.k_src_cb.get(k)
+    if (!src_cb) await this.k_src_cb.set(k, src_cb = new Map())
+    await src_cb.set(src, cb)
+    let ks = await this.src_ks.get(src)
+    if (!ks) await this.src_ks.set(src, ks = new Set())
+    ks.add(k)
   }
-  sub(src, cb) {
-//    console.log('sub ', this.k, src)
-    this.obs.set(src,cb)
+  async unsubGlobal(src) {
+    this.global.delete(src)
   }
-  unsub(src) {
-//    console.log('unsub ', this.k, src)
-    this.obs.delete(src)
+  async unsub(src, k) {
+    let src_cb = await this.k_src_cb.get(k)
+    if (src_cb) await src_cb.delete(src)
+    let ks = await this.src_ks.get(src)
+    if (ks) await ks.delete(k)
   }
-  pub(t) {
-    this.obs.forEach(cb => cb(this.k, this.v, t))
+  async unsubEveryWhere(src) {
+    await this.unsubGlobal(src)
+    let ks = await this.src_ks.get(src)
+    if (ks) await Promise.all(Array.from(ks).map(async k => this.unsub(src, k) ))
   }
-}
-
-class AsyncStore extends Store {
-  async has(k) {
-    return await super.has(k)
-  }
-  async get(k) {
-    return await super.get(k)
-  }
-  async set(k, v) {
-    return await super.set(k, v)
-  }
-  async del(k) {
-    return await super.del(k)
+  async pub(k, v, t) {
+    await this.global.forEach(cb => cb(k, v, t))
+    let src_cb = await this.k_src_cb.get(k)
+    if (src_cb) await src_cb.forEach(cb => cb(k, v, t))
   }
 }
 
-module.exports = { Store, AsyncStore, Observable}
+class StoreError extends Error {
+  constructor(message, ...param) {
+    super(message)
+    this.message = message
+    this.param = param
+    this.name = 'StoreError'
+  }
+
+}
+
+module.exports = { Store, PubSub, StoreError }

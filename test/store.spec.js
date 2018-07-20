@@ -13,28 +13,29 @@
 
 let test = require('tape')
   , Store = require(__dirname + '/../index.js').Store
+  , newId = () => (Date.now().toString(16))
 
-test('set subAll set del', function(t) {
+test('set subGlobal set del', async function(t) {
   let store = Store.build()
-    , id = Store.newId()
+    , id = newId()
     , src = 'test'
     , i = 0
 
-  store.set(id, 42)
+  await store.set(id, 42)
 
-  store.subAll(src, function(id, value, type) {
+  await store.subGlobal(src, function(id, value, type) {
     switch (i) {
     case 0:
       t.deepEqual(value, 'plop')
-      t.deepEqual(type, 'update')
+      t.deepEqual(type, 'set')
       break
     case 1:
       t.deepEqual(value, {foo: 'bar'})
-      t.deepEqual(type, 'update')
+      t.deepEqual(type, 'set')
       break
     case 2:
       t.deepEqual(value, {foo: 'bar'})
-      t.deepEqual(type, 'delete')
+      t.deepEqual(type, 'del')
       break
     default:
       t.fail('too much call')
@@ -43,11 +44,11 @@ test('set subAll set del', function(t) {
     i += 1
   })
 
-  store.set(id, 'plop')
+  await store.set(id, 'plop')
 
-  store.set(id, {foo: 'bar'})
+  await store.set(id, {foo: 'bar'})
 
-  store.del(id)
+  await store.del(id)
 
   t.deepEqual(i, 3)
 
@@ -55,27 +56,27 @@ test('set subAll set del', function(t) {
   t.end()
 })
 
-test('set sub set del', function(t) {
+test('set sub set del', async function(t) {
   let store = Store.build()
-    , id = Store.newId()
+    , id = newId()
     , src = 'test'
     , i = 0
 
-  store.set(id, 42)
+  await store.set(id, 42)
 
-  store.sub(id, src, function(id, value, type) {
+  await store.sub(src, id, function(id, value, type) {
     switch (i) {
     case 0:
       t.deepEqual(value, 'plop')
-      t.deepEqual(type, 'update')
+      t.deepEqual(type, 'set')
       break
     case 1:
       t.deepEqual(value, {foo: 'bar'})
-      t.deepEqual(type, 'update')
+      t.deepEqual(type, 'set')
       break
     case 2:
       t.deepEqual(value, {foo: 'bar'})
-      t.deepEqual(type, 'delete')
+      t.deepEqual(type, 'del')
       break
     default:
       t.fail('too much call')
@@ -84,11 +85,11 @@ test('set sub set del', function(t) {
     i += 1
   })
 
-  store.set(id, 'plop')
+  await store.set(id, 'plop')
 
-  store.set(id, {foo: 'bar'})
+  await store.set(id, {foo: 'bar'})
 
-  store.del(id)
+  await store.del(id)
 
   t.deepEqual(i, 3)
 
@@ -96,23 +97,23 @@ test('set sub set del', function(t) {
   t.end()
 })
 
-test('set subAll+cb set set unsubAll set del', function(t) {
+test('set subGlobal+cb set set unsubGlobal set del', async function(t) {
   let store = Store.build()
-    , id = Store.newId()
+    , id = newId()
     , src = 'test'
     , i = 0
 
-  store.set(id, 42)
+  await store.set(id, 42)
 
-  store.subAll(src, function(id, value, type) {
+  await store.subGlobal(src, function(id, value, type) {
     switch (i) {
     case 0:
       t.deepEqual(value, 'plop')
-      t.deepEqual(type, 'update')
+      t.deepEqual(type, 'set')
       break
     case 1:
       t.deepEqual(value, {foo: 'bar'})
-      t.deepEqual(type, 'update')
+      t.deepEqual(type, 'set')
       break
     default:
       t.fail('too much call')
@@ -121,15 +122,15 @@ test('set subAll+cb set set unsubAll set del', function(t) {
     i += 1
   })
 
-  store.set(id, 'plop')
+  await store.set(id, 'plop')
 
-  store.set(id, {foo: 'bar'})
+  await store.set(id, {foo: 'bar'})
 
-  store.unsubAll(src)
+  await store.unsubGlobal(src)
 
-  store.set(id, 'boom')
+  await store.set(id, 'boom')
 
-  store.del(id)
+  await store.del(id)
 
   t.deepEqual(i, 2)
 
@@ -137,15 +138,15 @@ test('set subAll+cb set set unsubAll set del', function(t) {
   t.end()
 })
 
-test('set sub+cb set set unsub set del', function(t) {
+test('set sub+cb set set unsub set del', async function(t) {
   let store = Store.build()
-    , id = Store.newId()
+    , id = newId()
     , src = 'test'
     , i = 0
 
-  store.set(id, 42)
+  await store.set(id, 42)
 
-  store.sub(id, src, function(id, value, type) {
+  await store.sub(src, id, function(id, value, type) {
     switch (i) {
     case 0:
       t.deepEqual(value, 42)
@@ -153,11 +154,11 @@ test('set sub+cb set set unsub set del', function(t) {
       break
     case 1:
       t.deepEqual(value, 'plop')
-      t.deepEqual(type, 'update')
+      t.deepEqual(type, 'set')
       break
     case 2:
       t.deepEqual(value, {foo: 'bar'})
-      t.deepEqual(type, 'update')
+      t.deepEqual(type, 'set')
       break
     default:
       t.fail('too much call')
@@ -166,15 +167,15 @@ test('set sub+cb set set unsub set del', function(t) {
     i += 1
   }, true)
 
-  store.set(id, 'plop')
+  await store.set(id, 'plop')
 
-  store.set(id, {foo: 'bar'})
+  await store.set(id, {foo: 'bar'})
 
-  store.unsub(id, src)
+  await store.unsub(src, id)
 
-  store.set(id, 'boom')
+  await store.set(id, 'boom')
 
-  store.del(id)
+  await store.del(id)
 
   t.deepEqual(i, 3)
 
@@ -182,7 +183,69 @@ test('set sub+cb set set unsub set del', function(t) {
   t.end()
 })
 
-test('set find', function(t) {
+test('set sub+cb set subGlobal set set unsubEveryWhere set del', async function(t) {
+  let store = Store.build()
+    , id = newId()
+    , src = 'test'
+    , i = 0
+
+  await store.set(id, 42)
+
+  await store.sub(src, id, function(id, value, type) {
+    switch (i) {
+    case 0:
+      t.deepEqual(value, 42)
+      t.deepEqual(type, 'sub')
+      break
+    case 1:
+      t.deepEqual(value, 'plop')
+      t.deepEqual(type, 'set')
+      break
+    case 2:
+      t.deepEqual(value, {foo: 'bar'})
+      t.deepEqual(type, 'set')
+      break
+    default:
+      t.fail('too much call')
+      break
+    }
+    i += 1
+  }, true)
+
+  await store.set(id, 'plop')
+
+  await store.subGlobal(src, function(id, value, type) {
+    switch (i) {
+    case 1:
+      t.deepEqual(value, {foo: 'bar'})
+      t.deepEqual(type, 'set')
+      break
+    case 2:
+      t.deepEqual(value, 'boom')
+      t.deepEqual(type, 'set')
+      break
+    default:
+      t.fail('too much call')
+      break
+    }
+  })
+  await store.set(id, {foo: 'bar'})
+
+  await store.set(id, 'boom')
+
+  await store.unsubEveryWhere(src)
+
+  await store.set(id, 'boom')
+
+  await store.del(id)
+
+  t.deepEqual(i, 5)
+
+  t.plan(9)
+  t.end()
+})
+
+test('set find', async function(t) {
   let store = Store.build()
     , data = [
       ['Prefix: 42', 42],
@@ -196,7 +259,7 @@ test('set find', function(t) {
     ]
     , found
 
-  data.forEach(([k,v])=>store.set(k,v))
+  await Promise.all(data.map(async([k,v])=>store.set(k,v)))
 
   found = []
   for (let e of store.find()) {
