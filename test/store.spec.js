@@ -205,6 +205,10 @@ test('set sub+cb set subGlobal set set unsubEveryWhere set del', async function(
       t.deepEqual(value, {foo: 'bar'})
       t.deepEqual(type, 'set')
       break
+    case 3:
+      t.deepEqual(value, 'boom')
+      t.deepEqual(type, 'set')
+      break
     default:
       t.fail('too much call')
       break
@@ -216,11 +220,11 @@ test('set sub+cb set subGlobal set set unsubEveryWhere set del', async function(
 
   await store.subGlobal(src, function(id, value, type) {
     switch (i) {
-    case 1:
+    case 2:
       t.deepEqual(value, {foo: 'bar'})
       t.deepEqual(type, 'set')
       break
-    case 2:
+    case 3:
       t.deepEqual(value, 'boom')
       t.deepEqual(type, 'set')
       break
@@ -239,9 +243,9 @@ test('set sub+cb set subGlobal set set unsubEveryWhere set del', async function(
 
   await store.del(id)
 
-  t.deepEqual(i, 5)
+  t.deepEqual(i, 4)
 
-  t.plan(9)
+  t.plan(13)
   t.end()
 })
 
