@@ -9,8 +9,8 @@
     "autotest": "nodemon -e js,yml -x 'tape test/**/*.spec.js |tap-summary --no-progress'",
     "autolinttest": "nodemon -e js,yml -x 'npm run lint && tape test/**/*.spec.js |tap-summary --no-progress'",
     "coverage": "nyc tape test/**/*.spec.js && nyc report --reporter=html",
-    "lint": "eslint index.js lib/ test/",
-    "autolint": "nodemon -x eslint index.js lib/ test/",
+    "lint": "eslint index.js test/",
+    "autolint": "nodemon -x eslint index.js test/",
     "preversion": "npm test"
   },
   "repository": {
@@ -27,10 +27,10 @@
   },
   "homepage": "https://github.com/nicocube/wool-store#readme",
   "devDependencies": {
-    "eslint": "^3.14.1",
-    "nodemon": "^1.17.2",
+    "eslint": "^5.2.0",
+    "nodemon": "^1.18.3",
     "nyc": "^12.0.2",
-    "tap-summary": "^3.0.1",
-    "tape": "^4.9.0"
+    "tap-summary": "^4.0.0",
+    "tape": "^4.9.1"
   }
 }
