@@ -111,9 +111,10 @@ class PubSub {
 class StoreError extends Error {
   constructor(message, ...param) {
     super(message)
+    this.name = 'StoreError'
     this.message = message
     this.param = param
-    this.name = 'StoreError'
+    this.stack = (new Error()).stack
   }
 
 }

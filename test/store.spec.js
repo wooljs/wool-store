@@ -12,7 +12,7 @@
 'use strict'
 
 let test = require('tape')
-  , Store = require(__dirname + '/../index.js').Store
+  , { Store, StoreError } = require(__dirname + '/../index.js')
   , newId = () => (Date.now().toString(16))
 
 test('set subGlobal set del', async function(t) {
@@ -50,9 +50,15 @@ test('set subGlobal set del', async function(t) {
 
   await store.del(id)
 
+  try {
+    await store.del(id)
+  } catch(e) {
+    t.throws(()=>{throw e}, StoreError)
+  }
+
   t.deepEqual(i, 3)
 
-  t.plan(7)
+  t.plan(8)
   t.end()
 })
 
@@ -167,11 +173,23 @@ test('set sub+cb set set unsub set del', async function(t) {
     i += 1
   }, true)
 
+  try {
+    await store.sub('foo', 'bar', ()=>{})
+  } catch(e) {
+    t.throws(()=>{throw e}, StoreError)
+  }
+
   await store.set(id, 'plop')
 
   await store.set(id, {foo: 'bar'})
 
   await store.unsub(src, id)
+
+  try {
+    await store.unsub('foo', 'bar', ()=>{})
+  } catch(e) {
+    t.throws(()=>{throw e}, StoreError)
+  }
 
   await store.set(id, 'boom')
 
@@ -179,7 +197,7 @@ test('set sub+cb set set unsub set del', async function(t) {
 
   t.deepEqual(i, 3)
 
-  t.plan(7)
+  t.plan(9)
   t.end()
 })
 
