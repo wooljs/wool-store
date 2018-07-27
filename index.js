@@ -102,9 +102,9 @@ class PubSub {
     if (ks) await Promise.all(Array.from(ks).map(async k => this.unsub(src, k) ))
   }
   async pub(k, v, t) {
-    await this.global.forEach(cb => cb(k, v, t))
+    await Promise.all(Array.from(this.global).map(async ([, cb]) => cb(k, v, t)))
     let src_cb = await this.k_src_cb.get(k)
-    if (src_cb) await src_cb.forEach(cb => cb(k, v, t))
+    if (src_cb) await Promise.all(Array.from(src_cb).map(async ([, cb]) => cb(k, v, t)))
   }
 }
 
