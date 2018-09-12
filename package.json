@@ -20,16 +20,16 @@
   "keywords": [
     "state"
   ],
-  "author": "Nicolas Lochet",
+  "author": "Nicolas Lochet <nicolas.lochet@gmail.com>",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/nicocube/wool-store/issues"
   },
   "homepage": "https://github.com/nicocube/wool-store#readme",
   "devDependencies": {
-    "eslint": "^5.3.0",
-    "nodemon": "^1.18.3",
-    "nyc": "^12.0.2",
+    "eslint": "^5.5.0",
+    "nodemon": "^1.18.4",
+    "nyc": "^13.0.1",
     "tap-summary": "^4.0.0",
     "tape": "^4.9.1"
   }
