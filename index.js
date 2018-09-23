@@ -47,6 +47,11 @@ class Store {
       }
     }.bind(this)()
   }
+  findOne(q) {
+    let r = this.find(q).next()
+    if (!r.done) return r.value
+    else return undefined
+  }
   async sub(src, k, cb, now) {
     if (! await this.has(k)) throw new StoreError('store.error.sub.key.not.exists(k)', k)
     await this.pubsub.sub(src, k, cb)
