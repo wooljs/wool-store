@@ -47,9 +47,12 @@ class Store {
       }
     }.bind(this)()
   }
-  findOne(q) {
-    let r = this.find(q).next()
-    if (!r.done) return r.value
+  async findOne(q) {
+    let { value, done } = await this.find(q).next()
+    if (!done){
+      let [k, v] = value
+      return v
+    }
     else return undefined
   }
   async sub(src, k, cb, now) {
