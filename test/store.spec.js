@@ -234,6 +234,9 @@ test('set sub+cb set subGlobal set set unsubEveryWhere set del', async function(
     i += 1
   }, true)
 
+  // sub again do nothing to validate multiple sub do not break things
+  await store.sub('plop', id, function() {})
+
   await store.set(id, 'plop')
 
   await store.subGlobal(src, function(id, value, type) {
@@ -267,7 +270,9 @@ test('set sub+cb set subGlobal set set unsubEveryWhere set del', async function(
   t.end()
 })
 
-test('set find', async function(t) {
+
+
+test('set find findOne', async function(t) {
   let store = Store.build()
     , data = [
       ['Prefix: 42', 42],
@@ -305,6 +310,8 @@ test('set find', async function(t) {
     ['Prefix: BaR6', {bar: 'bar'}]
   ])
 
+  t.deepEqual(await store.findOne(/^Prefix: /), 42)
+
   found = []
   for (let e of store.find(([,v]) => typeof v === 'object')) {
     found.push(e)
@@ -319,6 +326,12 @@ test('set find', async function(t) {
     ['Other: BaR6', {bar: 'bar'}]
   ])
 
-  t.plan(6)
+  t.deepEqual(await store.findOne(([,v]) => typeof v === 'object'), [1, 2, 3, 4])
+
+  
+
+  t.deepEqual(await store.findOne(([,v]) => v === 'foobar'), undefined)
+
+  t.plan(9)
   t.end()
 })

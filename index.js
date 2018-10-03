@@ -50,7 +50,7 @@ class Store {
   async findOne(q) {
     let { value, done } = await this.find(q).next()
     if (!done){
-      let [k, v] = value
+      let [,v] = value
       return v
     }
     else return undefined
