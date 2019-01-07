@@ -28,7 +28,7 @@ class Store {
     await this.pubsub.pub(k, v, 'set')
   }
   async del(k) {
-    if (! await this.has(k)) throw new StoreError('store.error.delete.key.not.exists()', k)
+    if (! await this.has(k)) throw new StoreError('store.error.delete.key.not.exists', k)
     let v = await this.get(k)
     await this.db.delete(k)
     await this.pubsub.pub(k, v, 'del')
@@ -110,9 +110,9 @@ class PubSub {
     if (ks) await Promise.all(Array.from(ks).map(async k => this.unsub(src, k) ))
   }
   async pub(k, v, t) {
-    await Promise.all(Array.from(this.global).map(async ([, cb]) => cb(k, v, t)))
+    await Promise.all(Array.from(this.global).map(async ([, cb]) => await cb(k, v, t)))
     let src_cb = await this.k_src_cb.get(k)
-    if (src_cb) await Promise.all(Array.from(src_cb).map(async ([, cb]) => cb(k, v, t)))
+    if (src_cb) await Promise.all(Array.from(src_cb).map(async ([, cb]) => await cb(k, v, t)))
   }
 }
 
