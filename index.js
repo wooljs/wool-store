@@ -33,7 +33,7 @@ class Store {
     await this.db.delete(k)
     await this.pubsub.pub(k, v, 'del')
   }
-  find(q) {
+  find(q, f = x=>x) {
     if (typeof q === 'undefined') {
       q = () => true
     } else if (q instanceof RegExp) {
@@ -42,7 +42,7 @@ class Store {
     }
     return function* gen() {
       for (let [k, v] of this.db.entries()) {
-        let kv = [k,v]
+        let kv = [k, f(v)]
         if ( q(kv) ) yield kv
       }
     }.bind(this)()
