@@ -328,8 +328,6 @@ test('set find findOne', async function(t) {
 
   t.deepEqual(await store.findOne(([,v]) => typeof v === 'object'), [1, 2, 3, 4])
 
-  
-
   t.deepEqual(await store.findOne(([,v]) => v === 'foobar'), undefined)
 
   t.plan(9)
