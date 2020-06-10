@@ -26,11 +26,11 @@
   },
   "homepage": "https://github.com/nicocube/wool-store#readme",
   "devDependencies": {
-    "eslint": "^6.8.0",
-    "nodemon": "^2.0.2",
-    "nyc": "^15.0.0",
+    "eslint": "^7.2.0",
+    "nodemon": "^2.0.4",
+    "nyc": "^15.1.0",
     "tap-summary": "^4.0.0",
-    "tape": "^4.13.2",
+    "tape": "^5.0.1",
     "tape-async": "^2.3.0"
   }
 }
