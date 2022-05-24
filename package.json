@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "pretest": "npm run lint",
-    "test": "tape test/**/*.spec.js |tap-spec-emoji --no-progress",
+    "test": "tape test/**/*.spec.js |tap-summary",
     "autotest": "nodemon -e js,yml -x 'npm test'",
     "lint": "eslint index.js test/",
     "autolint": "nodemon -x 'npm run lint'",
@@ -29,7 +29,7 @@
     "eslint": "^8.16.0",
     "nodemon": "^2.0.16",
     "nyc": "^15.1.0",
-    "tap-spec-emoji": "^6.1.2",
+    "@freecube/tap-summary": "^4.0.3",
     "tape": "^5.5.3",
     "tape-async": "^2.3.0"
   }
