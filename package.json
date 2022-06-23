@@ -10,7 +10,7 @@
     "lint": "eslint index.js test/",
     "autolint": "nodemon -x 'npm run lint'",
     "coverage": "nyc tape test/**/*.spec.js && nyc report --reporter=html",
-    "preversion": "npm test && npm outdated && npm audit"
+    "preversion": "npm test && npm outdated && npm audit --only=prod"
   },
   "repository": {
     "type": "git",
@@ -26,10 +26,10 @@
   },
   "homepage": "https://github.com/nicocube/wool-store#readme",
   "devDependencies": {
-    "eslint": "^8.16.0",
+    "@freecube/tap-summary": "^4.0.4",
+    "eslint": "^8.18.0",
     "nodemon": "^2.0.16",
     "nyc": "^15.1.0",
-    "@freecube/tap-summary": "^4.0.4",
     "tape": "^5.5.3",
     "tape-async": "^2.3.0"
   }
