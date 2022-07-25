@@ -27,8 +27,8 @@
   "homepage": "https://github.com/nicocube/wool-store#readme",
   "devDependencies": {
     "@freecube/tap-summary": "^4.0.4",
-    "eslint": "^8.18.0",
-    "nodemon": "^2.0.18",
+    "eslint": "^8.20.0",
+    "nodemon": "^2.0.19",
     "nyc": "^15.1.0",
     "tape": "^5.5.3",
     "tape-async": "^2.3.0"
