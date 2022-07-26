@@ -14,6 +14,9 @@ class Store {
     this.db = new Map()
     this.pubsub = new PubSub()
   }
+  /**
+   * @returns {Store}
+   */
   static build() {
     return new Store()
   }
@@ -32,8 +35,9 @@ class Store {
     let v = await this.get(k)
     await this.db.delete(k)
     await this.pubsub.pub(k, v, 'del')
+    await this.pubsub.unsub(k, v)
   }
-  find(q, f = x=>x) {
+  find(q, f = x => x) {
     if (typeof q === 'undefined') {
       q = () => true
     } else if (q instanceof RegExp) {
@@ -43,17 +47,24 @@ class Store {
     return function* gen() {
       for (let [k, v] of this.db.entries()) {
         let kv = [k, f(v)]
-        if ( q(kv) ) yield kv
+        if (q(kv)) yield kv
       }
     }.bind(this)()
   }
   async findOne(q) {
     let { value, done } = await this.find(q).next()
-    if (!done){
-      let [,v] = value
+    if (!done) {
+      let [, v] = value
       return v
     }
     else return undefined
+  }
+  async hasSub(src, k) {
+    return await this.pubsub.has(src, k)
+  }
+  async pub(k) {
+    let v = await this.get(k)
+    await this.pubsub.pub(k, v, 'pub')
   }
   async sub(src, k, cb, now) {
     if (! await this.has(k)) throw new StoreError('store.error.sub.key.not.exists(k)', k)
@@ -67,7 +78,10 @@ class Store {
     if (! await this.has(k)) throw new StoreError('store.error.unsub.key.not.exists(k)', k)
     await this.pubsub.unsub(src, k)
   }
-  async subGlobal(src, cb){
+  async hasSubGlobal(src) {
+    return await this.pubsub.hasGlobal(src)
+  }
+  async subGlobal(src, cb) {
     await this.pubsub.subGlobal(src, cb)
   }
   async unsubGlobal(src) {
@@ -84,8 +98,14 @@ class PubSub {
     this.k_src_cb = new Map()
     this.src_ks = new Map()
   }
+  async hasGlobal(src) {
+    return await this.global.has(src)
+  }
   async subGlobal(src, cb) {
     await this.global.set(src, cb)
+  }
+  async has(src, k) {
+    return (await this.k_src_cb.has(k)) && (await this.src_ks.has(src)) && (await this.src_ks.get(src).has(k))
   }
   async sub(src, k, cb) {
     let src_cb = await this.k_src_cb.get(k)
@@ -107,7 +127,7 @@ class PubSub {
   async unsubEveryWhere(src) {
     await this.unsubGlobal(src)
     let ks = await this.src_ks.get(src)
-    if (ks) await Promise.all(Array.from(ks).map(async k => this.unsub(src, k) ))
+    if (ks) await Promise.all(Array.from(ks).map(async k => this.unsub(src, k)))
   }
   async pub(k, v, t) {
     await Promise.all(Array.from(this.global).map(async ([, cb]) => await cb(k, v, t)))
