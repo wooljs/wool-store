@@ -6,10 +6,10 @@
   "scripts": {
     "pretest": "npm run lint",
     "test": "tape test/**/*.spec.js |tap-summary",
-    "autotest": "nodemon -e js,yml -x 'npm test'",
+    "test:watch": "nodemon -x 'clear; npm test'",
     "lint": "eslint index.js test/",
-    "autolint": "nodemon -x 'npm run lint'",
-    "coverage": "nyc tape test/**/*.spec.js && nyc report --reporter=html",
+    "lint:watch": "nodemon -x 'npm run lint'",
+    "coverage": "c8 tape test/**/*.spec.js && c8 report --reporter=html",
     "preversion": "npm test && npm outdated && npm audit --only=prod"
   },
   "repository": {
@@ -27,10 +27,9 @@
   "homepage": "https://github.com/nicocube/wool-store#readme",
   "devDependencies": {
     "@freecube/tap-summary": "^4.0.4",
+    "c8": "^8.0.1",
     "eslint": "^8.38.0",
-    "nodemon": "^2.0.22",
-    "nyc": "^15.1.0",
-    "tape": "^5.6.3",
-    "tape-async": "^2.3.0"
+    "nodemon": "^3.0.1",
+    "tape": "^5.6.3"
   }
 }

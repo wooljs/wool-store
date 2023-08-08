@@ -11,7 +11,7 @@
 
 'use strict'
 
-let test = require('tape-async')
+let test = require('tape')
   , { Store, StoreError } = require(__dirname + '/../index.js')
   , newId = () => (Date.now().toString(16))
 
