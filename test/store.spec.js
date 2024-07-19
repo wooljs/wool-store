@@ -152,6 +152,36 @@ test('set sub+cb set set unsub set del', async function (t) {
 
   await store.set(id, 42)
 
+  await store.sub('other', id, function(id, value, type) {
+    switch (i) {
+      case 0:
+        t.fail('should not be here, sub now for src only')
+        break
+      case 1:
+        t.deepEqual(value, 'plop')
+        t.deepEqual(type, 'set')
+        break
+      case 2:
+        t.deepEqual(value, 'plop')
+        t.deepEqual(type, 'pub')
+        break
+      case 3:
+        t.deepEqual(value, { foo: 'bar' })
+        t.deepEqual(type, 'set')
+        break
+      case 4:
+        t.deepEqual(value, 'boom')
+        t.deepEqual(type, 'set')
+        break
+      case 5:
+        t.deepEqual(type, 'del')
+        break
+      default:
+        t.fail('too much call '+i)
+        break
+    }
+  })
+
   await store.sub(src, id, function (id, value, type) {
     switch (i) {
       case 0:
@@ -171,10 +201,9 @@ test('set sub+cb set set unsub set del', async function (t) {
         t.deepEqual(type, 'set')
         break
       default:
-        t.fail('too much call')
+        t.fail('too much call '+i)
         break
     }
-    i += 1
   }, true)
 
   try {
@@ -183,10 +212,14 @@ test('set sub+cb set set unsub set del', async function (t) {
     t.throws(() => { throw e }, StoreError)
   }
 
+  i += 1
   await store.set(id, 'plop')
 
+  i += 1
   await store.pub(id)
 
+
+  i += 1
   await store.set(id, { foo: 'bar' })
 
   await store.unsub(src, id)
@@ -197,13 +230,15 @@ test('set sub+cb set set unsub set del', async function (t) {
     t.throws(() => { throw e }, StoreError)
   }
 
+  i += 1
   await store.set(id, 'boom')
 
+  i += 1
   await store.del(id)
 
-  t.deepEqual(i, 4)
+  t.deepEqual(i, 5)
 
-  t.plan(11)
+  t.plan(20)
   t.end()
 })
 

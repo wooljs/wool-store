@@ -71,7 +71,7 @@ class Store {
     await this.pubsub.sub(src, k, cb)
     if (now) {
       let v = await this.get(k)
-      await this.pubsub.pub(k, v, 'sub')
+      await this.pubsub.pubTo(src, k, v, 'sub')
     }
   }
   async unsub(src, k) {
@@ -133,6 +133,11 @@ class PubSub {
     await Promise.all(Array.from(this.global).map(async ([, cb]) => await cb(k, v, t)))
     let src_cb = await this.k_src_cb.get(k)
     if (src_cb) await Promise.all(Array.from(src_cb).map(async ([, cb]) => await cb(k, v, t)))
+  }
+  async pubTo(src, k, v, t) {
+    let src_cb = await this.k_src_cb.get(k)
+    const cb = await src_cb.get(src)
+    await cb(k, v, t)
   }
 }
 
