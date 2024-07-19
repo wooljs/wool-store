@@ -28,9 +28,9 @@
   "homepage": "https://github.com/nicocube/wool-store#readme",
   "devDependencies": {
     "@freecube/tap-summary": "^4.0.4",
-    "c8": "^8.0.1",
-    "nodemon": "^3.0.1",
+    "c8": "^10.1.2",
+    "nodemon": "^3.1.4",
     "standard": "^17.1.0",
-    "tape": "^5.7.2"
+    "tape": "^5.8.1"
   }
 }
