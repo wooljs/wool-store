@@ -1,6 +1,6 @@
 {
   "name": "wool-store",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "A store manager for wool",
   "main": "index.js",
   "type": "module",
