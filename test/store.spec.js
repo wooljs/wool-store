@@ -11,15 +11,16 @@
 
 'use strict'
 
-let test = require('tape')
-  , { Store, StoreError } = require(__dirname + '/../index.js')
-  , newId = () => (Date.now().toString(16))
+import test from 'tape'
+import { Store, StoreError } from '../index.js'
+
+const newId = () => (Date.now().toString(16))
 
 test('set subGlobal set del', async function (t) {
-  let store = Store.build()
-    , id = newId()
-    , src = 'test'
-    , i = 0
+  const store = Store.build()
+  const id = newId()
+  const src = 'test'
+  let i = 0
 
   await store.set(id, 42)
 
@@ -63,10 +64,10 @@ test('set subGlobal set del', async function (t) {
 })
 
 test('set sub set del', async function (t) {
-  let store = Store.build()
-    , id = newId()
-    , src = 'test'
-    , i = 0
+  const store = Store.build()
+  const id = newId()
+  const src = 'test'
+  let i = 0
 
   await store.set(id, 42)
 
@@ -104,10 +105,10 @@ test('set sub set del', async function (t) {
 })
 
 test('set subGlobal+cb set set unsubGlobal set del', async function (t) {
-  let store = Store.build()
-    , id = newId()
-    , src = 'test'
-    , i = 0
+  const store = Store.build()
+  const id = newId()
+  const src = 'test'
+  let i = 0
 
   await store.set(id, 42)
 
@@ -145,14 +146,14 @@ test('set subGlobal+cb set set unsubGlobal set del', async function (t) {
 })
 
 test('set sub+cb set set unsub set del', async function (t) {
-  let store = Store.build()
-    , id = newId()
-    , src = 'test'
-    , i = 0
+  const store = Store.build()
+  const id = newId()
+  const src = 'test'
+  let i = 0
 
   await store.set(id, 42)
 
-  await store.sub('other', id, function(id, value, type) {
+  await store.sub('other', id, function (id, value, type) {
     switch (i) {
       case 0:
         t.fail('should not be here, sub now for src only')
@@ -177,7 +178,7 @@ test('set sub+cb set set unsub set del', async function (t) {
         t.deepEqual(type, 'del')
         break
       default:
-        t.fail('too much call '+i)
+        t.fail('too much call ' + i)
         break
     }
   })
@@ -201,7 +202,7 @@ test('set sub+cb set set unsub set del', async function (t) {
         t.deepEqual(type, 'set')
         break
       default:
-        t.fail('too much call '+i)
+        t.fail('too much call ' + i)
         break
     }
   }, true)
@@ -217,7 +218,6 @@ test('set sub+cb set set unsub set del', async function (t) {
 
   i += 1
   await store.pub(id)
-
 
   i += 1
   await store.set(id, { foo: 'bar' })
@@ -243,10 +243,10 @@ test('set sub+cb set set unsub set del', async function (t) {
 })
 
 test('set sub+cb set subGlobal set set unsubEveryWhere set del', async function (t) {
-  let store = Store.build()
-    , id = newId()
-    , src = 'test'
-    , i = 0
+  const store = Store.build()
+  const id = newId()
+  const src = 'test'
+  let i = 0
 
   await store.set(id, 42)
 
@@ -319,26 +319,24 @@ test('set sub+cb set subGlobal set set unsubEveryWhere set del', async function 
   t.end()
 })
 
-
-
 test('set find findOne', async function (t) {
-  let store = Store.build()
-    , data = [
-      ['Prefix: 42', 42],
-      ['Prefix: 142', 'this is a string'],
-      ['Prefix: 513', [1, 2, 3, 4]],
-      ['Prefix: foo', { foo: 'bar' }],
-      ['Prefix: BaR6', { bar: 'bar' }],
-      ['Other: 42', 42],
-      ['Other: foo', { foo: 'bar' }],
-      ['Other: BaR6', { bar: 'bar' }]
-    ]
-    , found
+  const store = Store.build()
+  const data = [
+    ['Prefix: 42', 42],
+    ['Prefix: 142', 'this is a string'],
+    ['Prefix: 513', [1, 2, 3, 4]],
+    ['Prefix: foo', { foo: 'bar' }],
+    ['Prefix: BaR6', { bar: 'bar' }],
+    ['Other: 42', 42],
+    ['Other: foo', { foo: 'bar' }],
+    ['Other: BaR6', { bar: 'bar' }]
+  ]
+  let found
 
   await Promise.all(data.map(async ([k, v]) => store.set(k, v)))
 
   found = []
-  for (let e of store.find()) {
+  for (const e of store.find()) {
     found.push(e)
   }
 
@@ -346,7 +344,7 @@ test('set find findOne', async function (t) {
   t.deepEqual(found, data)
 
   found = []
-  for (let e of store.find(/^Prefix: /)) {
+  for (const e of store.find(/^Prefix: /)) {
     found.push(e)
   }
 
@@ -362,7 +360,7 @@ test('set find findOne', async function (t) {
   t.deepEqual(await store.findOne(/^Prefix: /), 42)
 
   found = []
-  for (let e of store.find(([, v]) => typeof v === 'object')) {
+  for (const e of store.find(([, v]) => typeof v === 'object')) {
     found.push(e)
   }
 

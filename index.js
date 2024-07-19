@@ -10,146 +10,168 @@
  */
 
 class Store {
-  constructor() {
+  constructor () {
     this.db = new Map()
     this.pubsub = new PubSub()
   }
+
   /**
    * @returns {Store}
    */
-  static build() {
+  static build () {
     return new Store()
   }
-  async has(k) {
+
+  async has (k) {
     return await this.db.has(k)
   }
-  async get(k) {
+
+  async get (k) {
     return await this.db.get(k)
   }
-  async set(k, v) {
+
+  async set (k, v) {
     await this.db.set(k, v)
     await this.pubsub.pub(k, v, 'set')
   }
-  async del(k) {
-    if (! await this.has(k)) throw new StoreError('store.error.delete.key.not.exists', k)
-    let v = await this.get(k)
+
+  async del (k) {
+    if (!await this.has(k)) throw new StoreError('store.error.delete.key.not.exists', k)
+    const v = await this.get(k)
     await this.db.delete(k)
     await this.pubsub.pub(k, v, 'del')
     await this.pubsub.unsub(k, v)
   }
-  find(q, f = x => x) {
+
+  find (q, f = x => x) {
     if (typeof q === 'undefined') {
       q = () => true
     } else if (q instanceof RegExp) {
-      let test = RegExp.prototype.test.bind(q)
+      const test = RegExp.prototype.test.bind(q)
       q = ([k]) => (test(k))
     }
-    return function* gen() {
-      for (let [k, v] of this.db.entries()) {
-        let kv = [k, f(v)]
+    return function * gen () {
+      for (const [k, v] of this.db.entries()) {
+        const kv = [k, f(v)]
         if (q(kv)) yield kv
       }
     }.bind(this)()
   }
-  async findOne(q) {
-    let { value, done } = await this.find(q).next()
+
+  async findOne (q) {
+    const { value, done } = await this.find(q).next()
     if (!done) {
-      let [, v] = value
+      const [, v] = value
       return v
-    }
-    else return undefined
+    } else return undefined
   }
-  async hasSub(src, k) {
+
+  async hasSub (src, k) {
     return await this.pubsub.has(src, k)
   }
-  async pub(k) {
-    let v = await this.get(k)
+
+  async pub (k) {
+    const v = await this.get(k)
     await this.pubsub.pub(k, v, 'pub')
   }
-  async sub(src, k, cb, now) {
-    if (! await this.has(k)) throw new StoreError('store.error.sub.key.not.exists(k)', k)
+
+  async sub (src, k, cb, now) {
+    if (!await this.has(k)) throw new StoreError('store.error.sub.key.not.exists(k)', k)
     await this.pubsub.sub(src, k, cb)
     if (now) {
-      let v = await this.get(k)
+      const v = await this.get(k)
       await this.pubsub.pubTo(src, k, v, 'sub')
     }
   }
-  async unsub(src, k) {
-    if (! await this.has(k)) throw new StoreError('store.error.unsub.key.not.exists(k)', k)
+
+  async unsub (src, k) {
+    if (!await this.has(k)) throw new StoreError('store.error.unsub.key.not.exists(k)', k)
     await this.pubsub.unsub(src, k)
   }
-  async hasSubGlobal(src) {
+
+  async hasSubGlobal (src) {
     return await this.pubsub.hasGlobal(src)
   }
-  async subGlobal(src, cb) {
+
+  async subGlobal (src, cb) {
     await this.pubsub.subGlobal(src, cb)
   }
-  async unsubGlobal(src) {
+
+  async unsubGlobal (src) {
     await this.pubsub.unsubGlobal(src)
   }
-  async unsubEveryWhere(src) {
+
+  async unsubEveryWhere (src) {
     await this.pubsub.unsubEveryWhere(src)
   }
 }
 
 class PubSub {
-  constructor() {
+  constructor () {
     this.global = new Map()
     this.k_src_cb = new Map()
     this.src_ks = new Map()
   }
-  async hasGlobal(src) {
+
+  async hasGlobal (src) {
     return await this.global.has(src)
   }
-  async subGlobal(src, cb) {
+
+  async subGlobal (src, cb) {
     await this.global.set(src, cb)
   }
-  async has(src, k) {
+
+  async has (src, k) {
     return (await this.k_src_cb.has(k)) && (await this.src_ks.has(src)) && (await this.src_ks.get(src).has(k))
   }
-  async sub(src, k, cb) {
-    let src_cb = await this.k_src_cb.get(k)
-    if (!src_cb) await this.k_src_cb.set(k, src_cb = new Map())
-    await src_cb.set(src, cb)
+
+  async sub (src, k, cb) {
+    let srcCb = await this.k_src_cb.get(k)
+    if (!srcCb) await this.k_src_cb.set(k, srcCb = new Map())
+    await srcCb.set(src, cb)
     let ks = await this.src_ks.get(src)
     if (!ks) await this.src_ks.set(src, ks = new Set())
     ks.add(k)
   }
-  async unsubGlobal(src) {
+
+  async unsubGlobal (src) {
     this.global.delete(src)
   }
-  async unsub(src, k) {
-    let src_cb = await this.k_src_cb.get(k)
-    if (src_cb) await src_cb.delete(src)
-    let ks = await this.src_ks.get(src)
+
+  async unsub (src, k) {
+    const srcCb = await this.k_src_cb.get(k)
+    if (srcCb) await srcCb.delete(src)
+    const ks = await this.src_ks.get(src)
     if (ks) await ks.delete(k)
   }
-  async unsubEveryWhere(src) {
+
+  async unsubEveryWhere (src) {
     await this.unsubGlobal(src)
-    let ks = await this.src_ks.get(src)
+    const ks = await this.src_ks.get(src)
     if (ks) await Promise.all(Array.from(ks).map(async k => this.unsub(src, k)))
   }
-  async pub(k, v, t) {
+
+  async pub (k, v, t) {
     await Promise.all(Array.from(this.global).map(async ([, cb]) => await cb(k, v, t)))
-    let src_cb = await this.k_src_cb.get(k)
-    if (src_cb) await Promise.all(Array.from(src_cb).map(async ([, cb]) => await cb(k, v, t)))
+    const srcCb = await this.k_src_cb.get(k)
+    if (srcCb) await Promise.all(Array.from(srcCb).map(async ([, cb]) => await cb(k, v, t)))
   }
-  async pubTo(src, k, v, t) {
-    let src_cb = await this.k_src_cb.get(k)
-    const cb = await src_cb.get(src)
+
+  async pubTo (src, k, v, t) {
+    const srcCb = await this.k_src_cb.get(k)
+    const cb = await srcCb.get(src)
     await cb(k, v, t)
   }
 }
 
 class StoreError extends Error {
-  constructor(message, ...param) {
+  constructor (message, ...param) {
     super(message)
     this.name = 'StoreError'
     this.message = message
     this.param = param
     this.stack = (new Error()).stack
   }
-
 }
 
-module.exports = { Store, PubSub, StoreError }
+export { Store, PubSub, StoreError }

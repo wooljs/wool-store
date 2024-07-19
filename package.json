@@ -3,14 +3,15 @@
   "version": "2.3.0",
   "description": "A store manager for wool",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "pretest": "npm run lint",
     "test": "tape test/**/*.spec.js |tap-summary",
     "test:watch": "nodemon -x 'clear; npm test'",
-    "lint": "eslint index.js test/",
+    "lint": "standard --fix *.js test",
     "lint:watch": "nodemon -x 'npm run lint'",
     "coverage": "c8 tape test/**/*.spec.js && c8 report --reporter=html",
-    "preversion": "npm test && npm outdated && npm audit --only=prod"
+    "preversion": "npm test && npm outdated && npm audit"
   },
   "repository": {
     "type": "git",
@@ -28,8 +29,8 @@
   "devDependencies": {
     "@freecube/tap-summary": "^4.0.4",
     "c8": "^8.0.1",
-    "eslint": "^8.53.0",
     "nodemon": "^3.0.1",
+    "standard": "^17.1.0",
     "tape": "^5.7.2"
   }
 }
