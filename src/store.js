@@ -18,9 +18,6 @@ import StoreError from './store-error.js'
  * @class Store
  */
 export default class Store {
-  /**
-   * Create a Store
-   */
   constructor () {
     this.db = new Map()
     this.pubsub = new PubSub()
@@ -56,7 +53,9 @@ export default class Store {
   }
 
   /**
-   * Sets one entry in the key-value store
+   * Sets one entry in the key-value store.
+   *
+   * Also publish with {@link PubSubType.set} type to subscribers.
    *
    * @param {string} k The key of the entry
    * @param {any} v The value of the entry
@@ -68,7 +67,9 @@ export default class Store {
   }
 
   /**
-   * Deletes one entry in the key-value store
+   * Deletes one entry in the key-value store.
+   *
+   * Also unsubscribe any subscriber and publish the entry with {@link  PubSubType.del} type.
    *
    * @param {string} k The key of the entry
    * @returns {Promise<void>} Resolves when the operation is complete
@@ -149,7 +150,7 @@ export default class Store {
   }
 
   /**
-   * Triggers a Publish on the entry for a given key
+   * Triggers a Publish on the entry for a given key with {@link PubSubType.pub} type.
    *
    * @param {string} k The key of the entry
    * @returns {Promise<void>} Resolves when the operation is complete
@@ -160,7 +161,7 @@ export default class Store {
   }
 
   /**
-   * Subscribes to an entry on a key for a source with a callback on changes
+   * Subscribes to an entry on a key for a source with a callback on changes.
    *
    * @param {string} src The source of the subscription
    * @param {string} k The key of the subscribed value
@@ -168,7 +169,7 @@ export default class Store {
    *  - `k` The key of the subscribed value
    *  - `v` The subscribed value
    *  - `t` The type of trigger
-   * @param {boolean} now Triggers a publish of type "sub" (meaning value on sub)
+   * @param {boolean} now Triggers a publish with {@link PubSubType.sub} type
    * @returns {Promise<void>} Resolves when the operation is complete
    */
   async sub (src, k, cb, now) {

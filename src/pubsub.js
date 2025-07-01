@@ -10,11 +10,17 @@
  */
 
 /**
- * @enum {string} Acceptable values
+ * An Enum of string, with following valid values :
  *  - `sub`: triggered on subscription (with `now` param to `true`)
  *  - `pub`: triggered on force publish
  *  - `set`: triggered on setting a new value
- *  - `del`: triggered on deleting the key (also unsub)
+ *  - `del`: triggered on deleting the key
+ * @enum {string}
+ *
+ * @example
+ * if (t === PubSubType.sub) {
+ *   ...
+ * }
  */
 export const PubSubType = {
   sub: 'sub',

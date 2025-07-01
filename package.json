@@ -11,7 +11,7 @@
     "lint": "standard --fix src test",
     "lint:watch": "nodemon -x 'npm run lint'",
     "coverage": "c8 tape test/**/*.spec.js && c8 report --reporter=html",
-    "document": "npx documentation readme src/*.js -s 'API Doc'",
+    "document": "npx documentation readme src/index.js -s 'API Doc' --markdown-toc-max-depth 3",
     "preversion": "npm run document && npm test && npm outdated && npm audit"
   },
   "repository": {

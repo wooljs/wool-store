@@ -1,6 +1,8 @@
 # wool-store
 
-A module to provide a basic An in-memory key-value Store with Pub/Sub mechanism
+A module to provide a basic in-memory key-value Store with Pub/Sub mechanism for project build with Wool.
+
+The interface is mainly async to enable future implementation working with persistent Database backends (MongoDB, Redis, Postgres, MariaDB, ...).
 
 # Usages
 
@@ -21,63 +23,233 @@ const value = await store.get('key')
 
 ### Table of Contents
 
+*   [Store](#store)
+    *   [has](#has)
+    *   [get](#get)
+    *   [set](#set)
+    *   [del](#del)
+    *   [find](#find)
+    *   [findOne](#findone)
+    *   [hasSub](#hassub)
+    *   [pub](#pub)
+    *   [sub](#sub)
+    *   [unsub](#unsub)
+    *   [hasSubGlobal](#hassubglobal)
+    *   [subGlobal](#subglobal)
+    *   [unsubGlobal](#unsubglobal)
+    *   [unsubEveryWhere](#unsubeverywhere)
+    *   [build](#build)
 *   [PubSubType](#pubsubtype)
+    *   [Examples](#examples-1)
 *   [PubSub](#pubsub)
     *   [hasGlobal](#hasglobal)
-        *   [Parameters](#parameters)
-    *   [subGlobal](#subglobal)
-        *   [Parameters](#parameters-1)
-    *   [has](#has)
-        *   [Parameters](#parameters-2)
-    *   [sub](#sub)
-        *   [Parameters](#parameters-3)
-    *   [unsubGlobal](#unsubglobal)
-        *   [Parameters](#parameters-4)
-    *   [unsub](#unsub)
-        *   [Parameters](#parameters-5)
-    *   [unsubEveryWhere](#unsubeverywhere)
-        *   [Parameters](#parameters-6)
-    *   [pub](#pub)
-        *   [Parameters](#parameters-7)
-    *   [pubTo](#pubto)
-        *   [Parameters](#parameters-8)
-*   [StoreError](#storeerror)
-    *   [Parameters](#parameters-9)
-*   [Store](#store)
-    *   [has](#has-1)
-        *   [Parameters](#parameters-10)
-    *   [get](#get)
-        *   [Parameters](#parameters-11)
-    *   [set](#set)
-        *   [Parameters](#parameters-12)
-    *   [del](#del)
-        *   [Parameters](#parameters-13)
-    *   [find](#find)
-        *   [Parameters](#parameters-14)
-        *   [Examples](#examples)
-    *   [findOne](#findone)
-        *   [Parameters](#parameters-15)
-    *   [hasSub](#hassub)
-        *   [Parameters](#parameters-16)
-    *   [pub](#pub-1)
-        *   [Parameters](#parameters-17)
-    *   [sub](#sub-1)
-        *   [Parameters](#parameters-18)
-    *   [unsub](#unsub-1)
-        *   [Parameters](#parameters-19)
-    *   [hasSubGlobal](#hassubglobal)
-        *   [Parameters](#parameters-20)
     *   [subGlobal](#subglobal-1)
-        *   [Parameters](#parameters-21)
+    *   [has](#has-1)
+    *   [sub](#sub-1)
     *   [unsubGlobal](#unsubglobal-1)
-        *   [Parameters](#parameters-22)
+    *   [unsub](#unsub-1)
     *   [unsubEveryWhere](#unsubeverywhere-1)
-        *   [Parameters](#parameters-23)
-    *   [build](#build)
+    *   [pub](#pub-1)
+    *   [pubTo](#pubto)
+*   [StoreError](#storeerror)
+    *   [Parameters](#parameters-23)
+
+## Store
+
+An in-memory key-value Store with Pub/Sub mechanism
+
+### has
+
+Checks presence of one entry in the key-value store
+
+#### Parameters
+
+*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the entry
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)>** Resolves with the presence when the operation is complete
+
+### get
+
+Gets one entry in the key-value store
+
+#### Parameters
+
+*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the entry
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<any>** Resolves with the value when the operation is complete
+
+### set
+
+Sets one entry in the key-value store.
+
+Also publish with [PubSubType.set](PubSubType.set) type to subscribers.
+
+#### Parameters
+
+*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the entry
+*   `v` **any** The value of the entry
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
+
+### del
+
+Deletes one entry in the key-value store.
+
+Also unsubscribe any subscriber and publish the entry with [PubSubType.del](PubSubType.del) type.
+
+#### Parameters
+
+*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the entry
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
+
+### find
+
+Find entries in the key-value store matching a query.
+
+Returns an async iterable of \[key, value] pairs, where each value is mapped by the provided function
+and filtered by the query predicate or regular expression.
+
+#### Parameters
+
+*   `q` **(function (\[[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String), any]): [boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean) | [RegExp](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp))?** A predicate function that receives a \[key, value] pair and returns true to include it, or a RegExp to match keys. If omitted, all entries are included. (optional, default `undefined`)
+*   `f` **function (any): any?** A mapping function applied to each value before filtering. Defaults to the identity function. (optional, default `x=>x`)
+
+#### Examples
+
+```javascript
+// Find all keys matching /^foo/ and uppercase the values
+for await (const [k, v] of store.find(/^foo/, v => v.toUpperCase())) {
+  console.log(k, v);
+}
+```
+
+Returns **AsyncIterable<\[[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String), any]>** Async iterable of filtered \[key, mappedValue] pairs.
+
+### findOne
+
+Finds the first entry in key-value store matching a query and returns its value
+
+#### Parameters
+
+*   `q` **(function (\[[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String), any]): [boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean) | [RegExp](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp))?** A predicate function that receives a \[key, value] pair and returns true to include it, or a RegExp to match keys. If omitted, all entries are included. (optional, default `undefined`)
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<(any | [undefined](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/undefined))>** The value if found, undefined otherwise
+
+### hasSub
+
+Checks if a subscription exists on a key for a source
+
+#### Parameters
+
+*   `src` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The source of the subscription
+*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the subscribed value
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)>** Resolves with the presence of a subscription when the operation is complete
+
+### pub
+
+Triggers a Publish on the entry for a given key with [PubSubType.pub](PubSubType.pub) type.
+
+#### Parameters
+
+*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the entry
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
+
+### sub
+
+Subscribes to an entry on a key for a source with a callback on changes.
+
+#### Parameters
+
+*   `src` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The source of the subscription
+*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the subscribed value
+*   `cb` **function (k: [string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String), v: any, t: [PubSubType](#pubsubtype)): void** The callback triggered when a publish is triggered on a subscribed entry*   `k` The key of the subscribed value
+    *   `v` The subscribed value
+    *   `t` The type of trigger
+*   `now` **[boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Triggers a publish with [PubSubType.sub](PubSubType.sub) type
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
+
+### unsub
+
+Unsubscribes to an entry on a key for a source
+
+#### Parameters
+
+*   `src` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The source of the subscription
+*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the subscribed value
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
+
+### hasSubGlobal
+
+Checks if a global subscription exists for a source
+
+#### Parameters
+
+*   `src` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The source of the subscription
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)>** Resolves with the presence of a subscription when the operation is complete
+
+### subGlobal
+
+Subscribes globally for a source with a callback on changes
+
+#### Parameters
+
+*   `src` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The source of the subscription
+*   `cb` **function (k: [string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String), v: any, t: [PubSubType](#pubsubtype)): void** The callback triggered when a publish is triggered on the store*   `k` The key of the subscribed value
+    *   `v` The subscribed value
+    *   `t` The type of trigger
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
+
+### unsubGlobal
+
+Unsubscribes globally for a source
+
+#### Parameters
+
+*   `src` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The source of the subscription
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
+
+### unsubEveryWhere
+
+Unsubscribes everywhere for a source
+
+#### Parameters
+
+*   `src` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The source of the subscription
+
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
+
+### build
+
+A static Store builder
+
+Returns **[Store](#store)** a new Store
 
 ## PubSubType
 
+An Enum of string, with following valid values :
+
+*   `sub`: triggered on subscription (with `now` param to `true`)
+*   `pub`: triggered on force publish
+*   `set`: triggered on setting a new value
+*   `del`: triggered on deleting the key
+
 Type: [string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)
+
+### Examples
+
+```javascript
+if (t === PubSubType.sub) {
+  ...
+}
+```
 
 ## PubSub
 
@@ -195,177 +367,3 @@ A custom Error for this module
 
 *   `message` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** a base message
 *   `params` **...any** interesting parameters for error analysis
-
-## Store
-
-An in-memory key-value Store with Pub/Sub mechanism
-
-### has
-
-Checks presence of one entry in the key-value store
-
-#### Parameters
-
-*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the entry
-
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)>** Resolves with the presence when the operation is complete
-
-### get
-
-Gets one entry in the key-value store
-
-#### Parameters
-
-*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the entry
-
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<any>** Resolves with the value when the operation is complete
-
-### set
-
-Sets one entry in the key-value store
-
-#### Parameters
-
-*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the entry
-*   `v` **any** The value of the entry
-
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
-
-### del
-
-Deletes one entry in the key-value store
-
-#### Parameters
-
-*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the entry
-
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
-
-### find
-
-Find entries in the key-value store matching a query.
-
-Returns an async iterable of \[key, value] pairs, where each value is mapped by the provided function
-and filtered by the query predicate or regular expression.
-
-#### Parameters
-
-*   `q` **(function (\[[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String), any]): [boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean) | [RegExp](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp))?** A predicate function that receives a \[key, value] pair and returns true to include it, or a RegExp to match keys. If omitted, all entries are included. (optional, default `undefined`)
-*   `f` **function (any): any?** A mapping function applied to each value before filtering. Defaults to the identity function. (optional, default `x=>x`)
-
-#### Examples
-
-```javascript
-// Find all keys matching /^foo/ and uppercase the values
-for await (const [k, v] of store.find(/^foo/, v => v.toUpperCase())) {
-  console.log(k, v);
-}
-```
-
-Returns **AsyncIterable<\[[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String), any]>** Async iterable of filtered \[key, mappedValue] pairs.
-
-### findOne
-
-Finds the first entry in key-value store matching a query and returns its value
-
-#### Parameters
-
-*   `q` **(function (\[[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String), any]): [boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean) | [RegExp](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp))?** A predicate function that receives a \[key, value] pair and returns true to include it, or a RegExp to match keys. If omitted, all entries are included. (optional, default `undefined`)
-
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<(any | [undefined](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/undefined))>** The value if found, undefined otherwise
-
-### hasSub
-
-Checks if a subscription exists on a key for a source
-
-#### Parameters
-
-*   `src` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The source of the subscription
-*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the subscribed value
-
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)>** Resolves with the presence of a subscription when the operation is complete
-
-### pub
-
-Triggers a Publish on the entry for a given key
-
-#### Parameters
-
-*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the entry
-
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
-
-### sub
-
-Subscribes to an entry on a key for a source with a callback on changes
-
-#### Parameters
-
-*   `src` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The source of the subscription
-*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the subscribed value
-*   `cb` **function (k: [string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String), v: any, t: [PubSubType](#pubsubtype)): void** The callback triggered when a publish is triggered on a subscribed entry*   `k` The key of the subscribed value
-    *   `v` The subscribed value
-    *   `t` The type of trigger
-*   `now` **[boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** Triggers a publish of type "sub" (meaning value on sub)
-
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
-
-### unsub
-
-Unsubscribes to an entry on a key for a source
-
-#### Parameters
-
-*   `src` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The source of the subscription
-*   `k` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The key of the subscribed value
-
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
-
-### hasSubGlobal
-
-Checks if a global subscription exists for a source
-
-#### Parameters
-
-*   `src` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The source of the subscription
-
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)>** Resolves with the presence of a subscription when the operation is complete
-
-### subGlobal
-
-Subscribes globally for a source with a callback on changes
-
-#### Parameters
-
-*   `src` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The source of the subscription
-*   `cb` **function (k: [string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String), v: any, t: [PubSubType](#pubsubtype)): void** The callback triggered when a publish is triggered on the store*   `k` The key of the subscribed value
-    *   `v` The subscribed value
-    *   `t` The type of trigger
-
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
-
-### unsubGlobal
-
-Unsubscribes globally for a source
-
-#### Parameters
-
-*   `src` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The source of the subscription
-
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
-
-### unsubEveryWhere
-
-Unsubscribes everywhere for a source
-
-#### Parameters
-
-*   `src` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The source of the subscription
-
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<void>** Resolves when the operation is complete
-
-### build
-
-A static Store builder
-
-Returns **[Store](#store)** a new Store
