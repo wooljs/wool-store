@@ -10,7 +10,7 @@
  */
 
 import test from 'tape'
-import { Store, StoreError } from '../index.js'
+import { Store, StoreError } from '../src/index.js'
 
 const newId = () => (Date.now().toString(16))
 
@@ -334,7 +334,7 @@ test('set find findOne', async function (t) {
   await Promise.all(data.map(async ([k, v]) => store.set(k, v)))
 
   found = []
-  for (const e of store.find()) {
+  for await (const e of store.find()) {
     found.push(e)
   }
 
@@ -342,7 +342,7 @@ test('set find findOne', async function (t) {
   t.deepEqual(found, data)
 
   found = []
-  for (const e of store.find(/^Prefix: /)) {
+  for await (const e of store.find(/^Prefix: /)) {
     found.push(e)
   }
 
@@ -358,7 +358,7 @@ test('set find findOne', async function (t) {
   t.deepEqual(await store.findOne(/^Prefix: /), 42)
 
   found = []
-  for (const e of store.find(([, v]) => typeof v === 'object')) {
+  for await (const e of store.find(([, v]) => typeof v === 'object')) {
     found.push(e)
   }
 
